@@ -8,7 +8,8 @@ maindir=getDirectory("Choose the parent phagocytosis directory");
 list=getFileList(maindir+"PhRhodo"); 
 
 for (i=0; i<list.length; i++) {
-
+	print(list[i]);
+	print(maindir);
 	//Open the microglial Ilastik segmentations and preprocess 
 	open(maindir+"Microglia/SimpleSegmentation/"+list[i]);
 	rename("microglia");
@@ -22,11 +23,13 @@ for (i=0; i<list.length; i++) {
 	//Produce the ROIs for intensity analysis 
 	run("ROI Manager..."); //Start up the ROI manager 
 	run("Analyze Particles...", "size=500-Infinity show=Overlay add in_situ");
+	//Save these stains to the output directory 
+	save(maindir+"masks/mask_"+list[i]);
 	close("microglia");
-
+	
 	//Open up the PhRhodo channel 
 	open(maindir+"PhRhodo/"+list[i]);
-	setThreshold(6500, 65535);
+	setThreshold(2500, 65535); //Originally used 6500 which gave weak signal
 	run("Create Mask");
 	rename(list[i]);
 	 
