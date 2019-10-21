@@ -9,30 +9,55 @@ library(PMCMR)
 library(car)
 library(FSA)
 
-data<-read.csv("~/Google Drive (mdolan@broadinstitute.org)/Phagocytosis_20190902/single_microglial_analysis_area.csv")
+data<-read.csv("~/Google Drive (mdolan@broadinstitute.org)/Phagocytosis_20191018/single_microglial_analysis.csv")
 
 #Extract the well id and experimental condition 
 data$well.id<-sapply(strsplit(x = as.character(data$Label), "_"), "[", 2) 
 
 data$Condition<-as.character(data$well.id)
-data$Condition<-sub(data$Condition, pattern = "^A", replacement = "VehDMSO-")
-data$Condition<-sub(data$Condition, pattern = "^B", replacement = "ccl3DMSO-")
-data$Condition<-sub(data$Condition, pattern = "^C", replacement = "ccl3Mara-")
-data$Condition<-sub(data$Condition, pattern = "^D", replacement = "VehMara-")
+data$Condition<-sub(data$Condition, pattern = "^A", replacement = "pbs-")
+data$Condition<-sub(data$Condition, pattern = "^B", replacement = "ccl3-")
+data$Condition<-sub(data$Condition, pattern = "^C", replacement = "ccl4-")
+data$Condition<-sub(data$Condition, pattern = "^D", replacement = "ccl3ccl4-")
 data$Condition<-sapply(strsplit(x = as.character(data$Condition), "-"), "[", 1) 
-#Do reality check to make sure the data is all there? Check the 
+#Do reality check to make sure the data is all there?  
 
+##PLOT DATA BY CELL 
 #Plot mean intensity per cell, can also plot %area which seems to be more of an effect 
-g<-ggplot(data, aes(x=Condition, y=X.Area))
+g<-ggplot(data, aes(x=reorder(Condition, Mean), y=Mean))
 g<-g+geom_boxplot(outlier.shape = NA, alpha=0.5, notch = T, fill="magenta", col="magenta")
 g<-g+geom_jitter(width = 0.3, alpha=0.3, size=0.3)
-g<-g+coord_cartesian(ylim=c(0, 5))
+g<-g+coord_cartesian(ylim=c(600,1000))
 g
 
 #Run a statistical test
 data$Condition<-as.factor(data$Condition)
-kruskal.test(X.Area ~Condition, data)
-dunnTest(X.Area ~ Condition, data, method="bonferroni")
+kruskal.test(Mean ~Condition, data)
+dunnTest(Mean ~ Condition, data, method="bonferroni")
 
-#Can repeat the above using the X.area 
+
+##PLOT DATA BY WELL 
+#Plot the data by well to aggregate analysis 
+ag.data<-aggregate(data$Mean, by = list(data$well.id), FUN = mean)
+colnames(ag.data)<-c("well.id", "Mean")
+ag.data$Condition<-as.character(ag.data$well.id)
+
+
+#Port the names to this aggregated dataset 
+ag.data$Condition<-sub(ag.data$Condition, pattern = "^A", replacement = "pbs-")
+ag.data$Condition<-sub(ag.data$Condition, pattern = "^B", replacement = "ccl3-")
+ag.data$Condition<-sub(ag.data$Condition, pattern = "^C", replacement = "ccl4-")
+ag.data$Condition<-sub(ag.data$Condition, pattern = "^D", replacement = "ccl3ccl4-")
+ag.data$Condition<-sapply(strsplit(x = as.character(ag.data$Condition), "-"), "[", 1) 
+
+g<-ggplot(ag.data, aes(x=reorder(Condition, Mean), y=Mean))
+g<-g+geom_boxplot(outlier.shape = NA, alpha=0.5, notch = F, fill="magenta", col="magenta")
+g<-g+geom_jitter(width = 0.3, alpha=0.3, size=0.3)
+g<-g+coord_cartesian(ylim=c(600,1000))
+g
+
+
+
+
+
 
