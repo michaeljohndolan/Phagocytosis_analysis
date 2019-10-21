@@ -14,19 +14,22 @@ for (i=0; i<list.length; i++) {
 	open(maindir+"Microglia/SimpleSegmentation/"+list[i]);
 	rename("microglia");
 	run("16-bit");
-	setOption("BlackBackground", false);
-	run("Make Binary");
+	setThreshold(1, 1);
+	run("Convert to Mask");
 	run("Erode");
 	run("Dilate");
 	run("Fill Holes");
 	
 	//Produce the ROIs for intensity analysis 
 	run("ROI Manager..."); //Start up the ROI manager 
-	run("Analyze Particles...", "size=500-Infinity show=Overlay add in_situ");
+	run("Analyze Particles...", "size=200-Infinity show=Overlay add in_situ");
+	saveAs("Tiff", maindir+"masks/"+list[i]);
+	rename("microglia");
 	close("microglia");
 
 	//Open up the PhRhodo channel 
 	open(maindir+"PhRhodo/"+list[i]); 
+	rename(list[i]);
 
 	//Import the ROIs from the microglia mask to phrhodo channel
 	//set measurements and measure intensity (area done separately) 
